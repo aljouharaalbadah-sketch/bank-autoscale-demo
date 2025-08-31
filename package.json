@@ -1,0 +1,16 @@
+{
+  "name": "bank-autoscale-demo",
+  "version": "1.0.0",
+  "description": "Demo bank site on Cloud Run with autoscaling + k6 peak traffic load test",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "NODE_ENV=development node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
