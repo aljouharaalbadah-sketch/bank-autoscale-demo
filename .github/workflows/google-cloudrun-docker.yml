@@ -32,7 +32,9 @@ name: 'Build and Deploy to Cloud Run'
 on:
   push:
     branches:
-      - '"main"'
+      - "main"
+  workflow_dispatch:   # 👈 add this line
+
 
 env:
   PROJECT_ID: 'bank-470719' # TODO: update to your Google Cloud project ID
