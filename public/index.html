@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>SkyBank • Autoscaling Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{--bg:#0d1117;--card:#161b22;--accent:#7c3aed;--text:#e6edf3;--muted:#9aa4b2}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,"Helvetica Neue",Arial,"Noto Sans",sans-serif;background:var(--bg);color:var(--text)}
+    header{padding:24px 20px;background:linear-gradient(90deg,var(--accent),#4f46e5);color:white}
+    h1{margin:0;font-size:28px}
+    main{max-width:900px;margin:24px auto;padding:0 16px;display:grid;gap:16px}
+    .card{background:var(--card);border:1px solid #263043;border-radius:12px;padding:16px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    button{border:0;border-radius:10px;padding:10px 14px;background:var(--accent);color:#fff;font-weight:600;cursor:pointer}
+    button:disabled{opacity:.6;cursor:not-allowed}
+    code, pre{background:#0b1220;border-radius:8px;padding:4px 8px}
+    table{width:100%;border-collapse:collapse}
+    td,th{border-bottom:1px solid #263043;padding:8px;text-align:left;font-size:14px}
+    .muted{color:var(--muted)}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SkyBank – Autoscaling Demo (Cloud Run)</h1>
+    <p class="muted">A tiny “bank” website that shows which container instance served your request.</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Live instance info</h2>
+      <div class="row">
+        <button id="poll">Start Live Poll</button>
+        <button id="stop" disabled>Stop</button>
+        <span class="muted">Fetches <code>/api</code> every 2s.</span>
+      </div>
+      <table>
+        <tbody id="info">
+          <tr><th>Service</th><td id="svc">—</td></tr>
+          <tr><th>Revision</th><td id="rev">—</td></tr>
+          <tr><th>Instance Hostname</th><td id="host">—</td></tr>
+          <tr><th>PID</th><td id="pid">—</td></tr>
+          <tr><th>Requests on this instance</th><td id="count">—</td></tr>
+          <tr><th>Time</th><td id="time">—</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>Peak hour load (optional)</h2>
+      <p>Use the provided <code>loadtest.js</code> with <b>k6</b> to create traffic so Cloud Run adds more instances.</p>
+      <pre>k6 run -e TARGET_URL=https://YOUR_CLOUD_RUN_URL loadtest.js</pre>
+      <p class="muted">Then watch scaling in Cloud Run ▶ Metrics ▶ Container instances.</p>
+    </section>
+  </main>
+
+  <script>
+    let timer = null;
+    async function getInfo() {
+      try {
+        const r = await fetch("/api", { cache: "no-store" });
+        const j = await r.json();
+        document.getElementById("svc").textContent = j.service;
+        document.getElementById("rev").textContent = j.revision;
+        document.getElementById("host").textContent = j.instanceHostname;
+        document.getElementById("pid").textContent = j.pid;
+        document.getElementById("count").textContent = j.requestCountOnThisInstance;
+        document.getElementById("time").textContent = j.time;
+      } catch (e) {
+        document.getElementById("time").textContent = "Error: " + e.message;
+      }
+    }
+    document.getElementById("poll").onclick = () => {
+      getInfo();
+      timer = setInterval(getInfo, 2000);
+      document.getElementById("poll").disabled = true;
+      document.getElementById("stop").disabled = false;
+    };
+    document.getElementById("stop").onclick = () => {
+      clearInterval(timer);
+      timer = null;
+      document.getElementById("poll").disabled = false;
+      document.getElementById("stop").disabled = true;
+    };
+  </script>
+</body>
+</html>
