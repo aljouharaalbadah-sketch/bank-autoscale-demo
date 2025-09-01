@@ -1,22 +1,44 @@
-import http from "k6/http";
-import { sleep } from "k6";
+import http from 'k6/http';
 
-// Stages cross the 30, 60, 90 concurrency thresholds (approx)
+// Hit the CPU-heavy endpoint, but not extreme
+const BASE = __ENV.TARGET_URL;
+const PATH = '/stress?ms=800'; // ~0.8s CPU per request
+
 export const options = {
-  stages: [
-    { duration: "30s", target: 20 },  // below 30 -> ~1 instance
-    { duration: "30s", target: 40 },  // around 40 -> ~2 instances
-    { duration: "30s", target: 70 },  // around 70 -> ~3 instances
-    { duration: "30s", target: 100 }, // around 100 -> ~4 instances
-    { duration: "30s", target: 0 },   // cool down
-  ]
+  scenarios: {
+    // Gentle ramp up to a modest concurrency
+    ramp: {
+      executor: 'ramping-vus',
+      startVUs: 0,
+      stages: [
+        { duration: '20s', target: 40 },  // warm up
+        { duration: '60s', target: 80 },  // hold moderate load
+        { duration: '30s', target: 120 }, // brief push (should trigger autoscale)
+        { duration: '30s', target: 0 },   // ramp down
+      ],
+      gracefulRampDown: '10s',
+    },
+
+    // Keep a steady request rate for a short period
+    steady_rate: {
+      executor: 'constant-arrival-rate',
+      rate: 80,               // ~80 req/sec
+      timeUnit: '1s',
+      duration: '90s',
+      preAllocatedVUs: 120,   // initial VU pool
+      maxVUs: 200,
+      startTime: '30s',       // starts after ramp begins
+    },
+  },
+  thresholds: {
+    http_req_failed: ['rate<0.02'],    // tolerate up to 2% errors
+    http_req_duration: ['p(95)<2000'], // 95% under 2s
+  },
 };
 
 export default function () {
-  const base = __ENV.TARGET_URL;
-  http.get(`${base}/stress?ms=1000`); // ~1 second per request
-  // 1s request time + ~1 iteration/sec per VU ≈ VUs ≈ concurrent requests
-  // With concurrency target 30, expect ~1 instance per ~30 VUs.
-  sleep(0);
+  http.get(`${BASE}${PATH}`);
+  // no sleep -> we want enough concurrency, but the scenarios keep it reasonable
 }
+
 
