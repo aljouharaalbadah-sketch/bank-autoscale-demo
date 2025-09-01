@@ -199,7 +199,7 @@
     if(stats?.memory?.heapUsedMB) kHeap.textContent = stats.memory.heapUsedMB;
 
     // windows & totals
-    const h = api.instanceHostname || "unknown";
+    const h = api.instanceId || api.instanceHostname || "unknown";
     instanceWindow.push(h); if (instanceWindow.length > Math.ceil(60000 / POLL_MS)) instanceWindow.shift();
     seenTotals.set(h, (seenTotals.get(h)||0) + 1);
     renderChips(); updateBar(); updateInstLine();
