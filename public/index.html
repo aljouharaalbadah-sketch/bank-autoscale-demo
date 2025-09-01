@@ -1,270 +1,215 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SkyBank — Autoscaling Demo</title>
-  <style>
-    :root{
-      --bg:#0f1220; --panel:#171a2b; --muted:#8b92b5; --fg:#eef0ff; --brand:#7c5cff; --brand2:#9b72ff;
-      --ok:#22c55e; --warn:#f59e0b; --err:#ef4444; --chip:#1f2237; --border:#2a2e45;
-      --shadow:0 10px 30px rgba(0,0,0,.35);
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:radial-gradient(1200px 700px at 15% -10%, #2a2f4d 0%, transparent 60%), var(--bg); color:var(--fg); font:16px/1.45 system-ui,-apple-system,Segoe UI,Inter,Roboto,Arial}
-    header{max-width:1200px;margin:0 auto;padding:22px 20px 8px;display:flex;gap:14px;align-items:center}
-    header img{width:38px;height:38px}
-    .title{font-size:24px;font-weight:800;letter-spacing:.3px;background:linear-gradient(90deg,var(--brand),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
-    .sub{color:var(--muted);font-size:13px}
-    main{max-width:1200px;margin:12px auto 64px;padding:0 20px;display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
-    .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
-    .hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
-    .hd h2{margin:0;font-size:18px}
-    .controls{display:flex;gap:8px}
-    button{all:unset;background:var(--chip);border:1px solid var(--border);padding:9px 14px;border-radius:10px;cursor:pointer}
-    button.brand{background:linear-gradient(90deg,var(--brand),var(--brand2));border:none;color:white}
-    button:disabled{opacity:.6;cursor:not-allowed}
-    .grid{display:grid;grid-template-columns:220px 1fr}
-    .row{display:contents}
-    .row div{padding:12px 16px;border-bottom:1px solid var(--border)}
-    .key{color:var(--muted)}
-    .value{font-weight:600}
-    .chips{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px}
-    .chip{background:var(--chip);border:1px solid var(--border);padding:6px 10px;border-radius:999px;font-size:12px}
-    .kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:12px 16px}
-    .kpi{background:var(--chip);border:1px solid var(--border);border-radius:12px;padding:10px}
-    .kpi .label{color:var(--muted);font-size:12px}
-    .kpi .val{font-size:20px;font-weight:800;margin-top:4px}
-    .status{display:flex;align-items:center;gap:10px;padding:12px 16px}
-    .pill{border-radius:999px;padding:6px 10px;font-size:12px;border:1px solid var(--border);background:var(--chip)}
-    .pill.ok{border-color:#1f7e42;color:#a7f3ce;background:rgba(34,197,94,.08)}
-    .pill.warn{border-color:#8a5a12;color:#fde68a;background:rgba(245,158,11,.12)}
-    .pill.err{border-color:#8a1a1a;color:#fecaca;background:rgba(239,68,68,.1)}
-    .mini{padding:12px 16px}
-    canvas{width:100%;height:160px;display:block;background:#12152a;border-radius:10px;border:1px solid var(--border)}
-    .note{padding:10px 16px;color:var(--muted);font-size:12px}
-    @media (max-width:900px){main{grid-template-columns:1fr}}
-  </style>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SkyBank — Autoscaling Demo</title>
+<link rel="icon" href="/logo.svg">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+  :root{--bg:#0f1220;--panel:#171a2b;--muted:#8b92b5;--fg:#eef0ff;--brand:#7c5cff;--brand2:#9b72ff;--ok:#22c55e;--warn:#f59e0b;--err:#ef4444;--chip:#1f2237;--border:#2a2e45;--shadow:0 10px 30px rgba(0,0,0,.35)}
+  *{box-sizing:border-box} body{margin:0;background:radial-gradient(1200px 700px at 15% -10%, #2a2f4d 0%, transparent 60%), var(--bg);color:var(--fg);font:16px/1.45 system-ui,Inter,Segoe UI,Roboto,Arial}
+  header{max-width:1240px;margin:0 auto;padding:22px 20px 8px;display:flex;gap:14px;align-items:center}
+  header img{width:40px;height:40px} .title{font-size:24px;font-weight:800;background:linear-gradient(90deg,var(--brand),var(--brand2));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:13px}
+  main{max-width:1240px;margin:14px auto 64px;padding:0 20px;display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .hd{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
+  .hd h2{margin:0;font-size:18px} .controls{display:flex;gap:8px;align-items:center}
+  button{all:unset;background:var(--chip);border:1px solid var(--border);padding:9px 14px;border-radius:10px;cursor:pointer}
+  button.brand{background:linear-gradient(90deg,var(--brand),var(--brand2));border:none;color:white}
+  button:disabled{opacity:.6;cursor:not-allowed}
+  select, input[type="number"]{background:var(--chip);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:8px}
+  .grid{display:grid;grid-template-columns:220px 1fr}
+  .row{display:contents} .row div{padding:12px 16px;border-bottom:1px solid var(--border)}
+  .key{color:var(--muted)} .value{font-weight:600}
+  .pill{border-radius:999px;padding:6px 10px;font-size:12px;border:1px solid var(--border);background:var(--chip)}
+  .ok{border-color:#1f7e42;color:#a7f3ce;background:rgba(34,197,94,.08)} .warn{border-color:#8a5a12;color:#fde68a;background:rgba(245,158,11,.12)}
+  .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:12px 16px}
+  .kpi{background:var(--chip);border:1px solid var(--border);border-radius:12px;padding:10px}
+  .kpi .label{color:var(--muted);font-size:12px} .kpi .val{font-size:20px;font-weight:800;margin-top:4px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px} .chip{background:var(--chip);border:1px solid var(--border);padding:6px 10px;border-radius:999px;font-size:12px}
+  .panel{padding:12px 16px} .note{padding:10px 16px;color:var(--muted);font-size:12px}
+  @media (max-width:980px){main{grid-template-columns:1fr}}
+</style>
 </head>
 <body>
   <header>
-    <img src="/logo.svg" alt="SkyBank logo" />
+    <img src="/logo.svg" alt="SkyBank logo"/>
     <div>
       <div class="title">SkyBank — Autoscaling Demo (Cloud Run)</div>
-      <div class="sub">Shows which Cloud Run container instance handled your request, with live autoscaling status and metrics.</div>
+      <div class="sub">Live autoscale status, instance details, and interactive charts. Increase concurrent load to see scaling.</div>
     </div>
   </header>
 
   <main>
-    <!-- Left: Live Instance & Metrics -->
-    <section class="card" id="live">
+    <!-- LEFT: Live + Details -->
+    <section class="card">
       <div class="hd">
         <h2>Live instance info</h2>
         <div class="controls">
           <button class="brand" id="startBtn">Start</button>
           <button id="stopBtn" disabled>Stop</button>
+          <label class="sub" style="margin-left:8px">Poll every
+            <select id="pollSel">
+              <option value="1000">1s</option><option value="2000" selected>2s</option><option value="3000">3s</option><option value="5000">5s</option>
+            </select>
+          </label>
+          <button id="openStress" title="Open /stress?ms=800 in a new tab">Open stress</button>
         </div>
       </div>
 
-      <div class="status">
-        <span id="scalePill" class="pill warn">Awaiting data…</span>
-        <span id="statusText" class="sub">Start to begin polling <code>/api</code> every 2s.</span>
+      <div class="panel">
+        <span id="scalePill" class="pill warn">Single instance (no autoscaling yet)</span>
+        <span id="statusText" class="sub" style="margin-left:8px">Start polling to detect instances.</span>
       </div>
 
       <div class="kpis">
         <div class="kpi"><div class="label">Polls</div><div class="val" id="kPolls">0</div></div>
-        <div class="kpi"><div class="label">Unique instances hit</div><div class="val" id="kUnique">0</div></div>
+        <div class="kpi"><div class="label">Unique instances (1m)</div><div class="val" id="kUnique">0</div></div>
         <div class="kpi"><div class="label">Avg latency (ms)</div><div class="val" id="kLatency">—</div></div>
+        <div class="kpi"><div class="label">Heap used (MB)</div><div class="val" id="kHeap">—</div></div>
       </div>
 
-      <div class="mini">
-        <canvas id="latencyChart" aria-label="Latency sparkline"></canvas>
+      <div class="panel">
+        <canvas id="latencyLine" height="170"></canvas>
       </div>
 
       <div class="grid" role="table" aria-label="instance details">
-        <div class="row">
-          <div class="key">Service</div><div class="value" id="svc">—</div>
-        </div>
-        <div class="row">
-          <div class="key">Revision</div><div class="value" id="rev">—</div>
-        </div>
-        <div class="row">
-          <div class="key">Instance Hostname</div><div class="value" id="host">—</div>
-        </div>
-        <div class="row">
-          <div class="key">PID</div><div class="value" id="pid">—</div>
-        </div>
-        <div class="row">
-          <div class="key">Requests on this instance</div><div class="value" id="rc">—</div>
-        </div>
-        <div class="row">
-          <div class="key">Time</div><div class="value" id="time">—</div>
-        </div>
+        <div class="row"><div class="key">Service</div><div class="value" id="svc">—</div></div>
+        <div class="row"><div class="key">Revision</div><div class="value" id="rev">—</div></div>
+        <div class="row"><div class="key">Instance Hostname</div><div class="value" id="host">—</div></div>
+        <div class="row"><div class="key">PID</div><div class="value" id="pid">—</div></div>
+        <div class="row"><div class="key">Requests on this instance</div><div class="value" id="rc">—</div></div>
+        <div class="row"><div class="key">Time</div><div class="value" id="time">—</div></div>
       </div>
 
       <div class="chips" id="instances" aria-live="polite"></div>
-      <div class="note">
-        Tip: open this page in multiple tabs or run a load test (e.g. <code>/stress?ms=800</code>) to see scaling.
-      </div>
+      <div class="note">Status flips to <b>Autoscaling active</b> when >1 unique container hostname is observed in the last ~60s window.</div>
     </section>
 
-    <!-- Right: Dashboards -->
+    <!-- RIGHT: Dashboards -->
     <section class="card">
       <div class="hd"><h2>Dashboards</h2></div>
-      <div class="mini">
-        <div class="sub" style="margin-bottom:8px">Latency (ms)</div>
-        <canvas id="chartLatency"></canvas>
+      <div class="panel">
+        <div class="sub" style="margin-bottom:6px">Instances (rolling window)</div>
+        <canvas id="instLine" height="140"></canvas>
       </div>
-      <div class="mini">
-        <div class="sub" style="margin-bottom:8px">Instances detected</div>
-        <canvas id="chartInstances"></canvas>
+      <div class="panel">
+        <div class="sub" style="margin-bottom:6px">Requests per instance (this session)</div>
+        <canvas id="barPerInstance" height="220"></canvas>
       </div>
-      <div class="note">
-        <strong>Status logic:</strong> when this page observes requests served by <em>more than one</em> unique container host within the last minute, status flips to <b>Autoscaling active</b>.
-      </div>
+      <div class="note">Open multiple tabs or use a load tool (k6, curl) on <code>/stress?ms=800</code> to drive concurrency.</div>
     </section>
   </main>
 
-  <script>
-    // --- DOM hooks
-    const svcEl=document.getElementById("svc");
-    const revEl=document.getElementById("rev");
-    const hostEl=document.getElementById("host");
-    const pidEl=document.getElementById("pid");
-    const rcEl=document.getElementById("rc");
-    const timeEl=document.getElementById("time");
-    const kPolls=document.getElementById("kPolls");
-    const kUnique=document.getElementById("kUnique");
-    const kLatency=document.getElementById("kLatency");
-    const pill=document.getElementById("scalePill");
-    const statusText=document.getElementById("statusText");
-    const instancesWrap=document.getElementById("instances");
-    const startBtn=document.getElementById("startBtn");
-    const stopBtn=document.getElementById("stopBtn");
+<script>
+  // DOM refs
+  const svcEl = document.getElementById("svc"), revEl = document.getElementById("rev"),
+        hostEl = document.getElementById("host"), pidEl = document.getElementById("pid"),
+        rcEl = document.getElementById("rc"), timeEl = document.getElementById("time");
+  const kPolls = document.getElementById("kPolls"), kUnique = document.getElementById("kUnique"),
+        kLatency = document.getElementById("kLatency"), kHeap = document.getElementById("kHeap");
+  const pill = document.getElementById("scalePill"), statusText = document.getElementById("statusText");
+  const instancesWrap = document.getElementById("instances");
+  const startBtn = document.getElementById("startBtn"), stopBtn = document.getElementById("stopBtn");
+  const pollSel = document.getElementById("pollSel"), openStress = document.getElementById("openStress");
 
-    // --- simple charts (no external libs)
-    const latCanvas=document.getElementById("chartLatency").getContext("2d");
-    const instCanvas=document.getElementById("chartInstances").getContext("2d");
-    const tinyCanvas=document.getElementById("latencyChart").getContext("2d");
+  let timer = null, POLL_MS = +pollSel.value, polls = 0;
+  const latencies = [];                       // last N sample latencies (ms)
+  const instanceWindow = [];                  // last N hostnames (~60s window)
+  const seenTotals = new Map();               // hostname -> hits
 
-    let timer=null;
-    const HZ=2000;                         // poll every 2s
-    const latencies=[];                     // last N latency samples (ms)
-    const instanceWindow=[];                // last N hostnames (rolling window ~60s)
-    const seenTotal=new Map();              // lifetime unique hosts + hit counts
-    let polls=0;
+  // Charts (Chart.js)
+  const latencyLine = new Chart(document.getElementById("latencyLine"), {
+    type: "line",
+    data: { labels: [], datasets: [{ label:"Latency (ms)", data: [], tension:.3 }]},
+    options: { animation:false, plugins:{legend:{display:false}}, scales:{x:{display:false}, y:{beginAtZero:true}} }
+  });
+  const instLine = new Chart(document.getElementById("instLine"), {
+    type: "line",
+    data: { labels: [], datasets: [{ label:"Instances", data: [], tension:.3, borderColor:"#7be3b9"}]},
+    options: { animation:false, plugins:{legend:{display:false}}, scales:{x:{display:false}, y:{beginAtZero:true, precision:0}} }
+  });
+  const barPerInstance = new Chart(document.getElementById("barPerInstance"), {
+    type: "bar",
+    data: { labels: [], datasets: [{ label:"Hits", data: [], backgroundColor:"#9aa6ff"}]},
+    options: { animation:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, precision:0}} }
+  });
 
-    function setButtons(live){
-      startBtn.disabled = live;
-      stopBtn.disabled  = !live;
-    }
-
-    function setStatusActive(active){
-      if (active){
-        pill.className="pill ok";
-        pill.textContent="Autoscaling active";
-        statusText.textContent="Multiple container instances observed in the last minute.";
-      }else{
-        pill.className="pill warn";
-        pill.textContent="Single instance";
-        statusText.textContent="Only one instance observed recently. Generate more concurrent load to trigger autoscaling.";
-      }
-    }
-
-    function drawLine(ctx, values, color="#8ea0ff"){
-      const W=ctx.canvas.width, H=ctx.canvas.height;
-      ctx.clearRect(0,0,W,H);
-      ctx.lineWidth=2; ctx.strokeStyle=color; ctx.beginPath();
-      if (values.length===0) return;
-      const max=Math.max(...values, 1);
-      const min=Math.min(...values, 0);
-      const span=Math.max(max-min,1);
-      const step=W/Math.max(values.length-1,1);
-      values.forEach((v,i)=>{
-        const x=i*step;
-        const y=H - ((v-min)/span)*H;
-        if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-      });
-      ctx.stroke();
-    }
-
-    function renderChips(){
-      instancesWrap.innerHTML="";
-      const sorted=[...seenTotal.entries()].sort((a,b)=>b[1]-a[1]);
-      sorted.slice(0,12).forEach(([h,count])=>{
-        const d=document.createElement("div");
-        d.className="chip"; d.title=`${count} hits`; d.textContent=h;
-        instancesWrap.appendChild(d);
-      });
-    }
-
-    async function tick(){
-      const t0=performance.now();
-      const res = await fetch("/api", {cache:"no-store"});
-      const data = await res.json();
-      const t1=performance.now();
-
-      // update detail table
-      svcEl.textContent=data.service||"—";
-      revEl.textContent=data.revision||"—";
-      hostEl.textContent=data.instanceHostname||"—";
-      pidEl.textContent=data.pid ?? "—";
-      rcEl.textContent=data.requestCountOnThisInstance ?? "—";
-      timeEl.textContent=data.time||"—";
-
-      // kpis
-      polls++; kPolls.textContent=polls;
-
-      // latency
-      const latency=Math.round(t1-t0);
-      latencies.push(latency); if (latencies.length>60) latencies.shift();
-      kLatency.textContent=Math.round(latencies.reduce((a,b)=>a+b,0)/latencies.length);
-      drawLine(tinyCanvas, latencies, "#a8b4ff");
-      drawLine(latCanvas, latencies, "#a8b4ff");
-
-      // autoscaling window (last ~60s)
-      instanceWindow.push(data.instanceHostname||"unknown");
-      if (instanceWindow.length>30) instanceWindow.shift(); // ~30*2s = ~60s
-      const uniqueNow = new Set(instanceWindow);
-      kUnique.textContent = uniqueNow.size;
-
-      // global seen + chips
-      seenTotal.set(data.instanceHostname||"unknown", (seenTotal.get(data.instanceHostname||"unknown")||0)+1);
-      renderChips();
-
-      // status
-      setStatusActive(uniqueNow.size>1);
-
-      // right chart: instances (windowed)
-      const instSeries = instanceWindow.map((_,idx)=>{
-        return (new Set(instanceWindow.slice(Math.max(0,idx-10), idx+1))).size;
-      });
-      drawLine(instCanvas, instSeries, "#7be3b9");
-    }
-
-    startBtn.addEventListener("click", ()=>{
-      if (timer) return;
-      setButtons(true);
-      tick(); timer=setInterval(tick, HZ);
+  function setButtons(live){ startBtn.disabled = live; stopBtn.disabled = !live; pollSel.disabled = live; }
+  function setStatusActive(active){
+    if(active){ pill.className="pill ok"; pill.textContent="Autoscaling active"; statusText.textContent="Multiple container instances observed recently."; }
+    else      { pill.className="pill warn"; pill.textContent="Single instance";    statusText.textContent="Increase concurrent load to trigger autoscaling."; }
+  }
+  function pushLatency(v){
+    const maxPoints = 60;
+    latencies.push(v); if (latencies.length>maxPoints) latencies.shift();
+    const avg = Math.round(latencies.reduce((a,b)=>a+b,0)/latencies.length);
+    kLatency.textContent = isFinite(avg) ? avg : "—";
+    latencyLine.data.labels = latencies.map((_,i)=>i);
+    latencyLine.data.datasets[0].data = latencies;
+    latencyLine.update();
+  }
+  function renderChips(){
+    instancesWrap.innerHTML="";
+    [...seenTotals.entries()].sort((a,b)=>b[1]-a[1]).slice(0,12).forEach(([h,count])=>{
+      const d=document.createElement("div"); d.className="chip"; d.title=`${count} hits`; d.textContent=h; instancesWrap.appendChild(d);
     });
-    stopBtn.addEventListener("click", ()=>{
-      if (!timer) return;
-      clearInterval(timer); timer=null;
-      setButtons(false);
-    });
+  }
+  function updateBar(){
+    const labels = [...seenTotals.keys()];
+    const data = labels.map(k => seenTotals.get(k));
+    barPerInstance.data.labels = labels;
+    barPerInstance.data.datasets[0].data = data;
+    barPerInstance.update();
+  }
+  function updateInstLine(){
+    // plot size of distinct hosts in rolling window
+    const series = instanceWindow.map((_,i)=> new Set(instanceWindow.slice(Math.max(0,i-30), i+1)).size);
+    instLine.data.labels = series.map((_,i)=>i);
+    instLine.data.datasets[0].data = series;
+    instLine.update();
+    const recentUnique = new Set(instanceWindow.slice(-30)).size;
+    kUnique.textContent = recentUnique;
+    setStatusActive(recentUnique > 1);
+  }
 
-    // resize canvases to device pixels for crisper lines
-    function prepCanvas(c){
-      const dpr = window.devicePixelRatio || 1;
-      const r = c.getBoundingClientRect();
-      c.width = Math.max(300, r.width * dpr);
-      c.height = Math.max(120, r.height * dpr);
-      const ctx = c.getContext("2d");
-      ctx.scale(dpr,dpr);
-    }
-    [document.getElementById("chartLatency"), document.getElementById("chartInstances"), document.getElementById("latencyChart")]
-      .forEach(prepCanvas);
-    window.addEventListener("resize", ()=>[...document.querySelectorAll("canvas")].forEach(prepCanvas));
-  </script>
+  async function tick(){
+    const t0 = performance.now();
+    const [api, stats] = await Promise.all([
+      fetch("/api",  {cache:"no-store"}).then(r=>r.json()),
+      fetch("/stats",{cache:"no-store"}).then(r=>r.json()).catch(()=>null)
+    ]);
+    const t1 = performance.now();
+
+    svcEl.textContent = api.service||"—";
+    revEl.textContent = api.revision||"—";
+    hostEl.textContent= api.instanceHostname||"—";
+    pidEl.textContent = api.pid ?? "—";
+    rcEl.textContent  = api.requestCountOnThisInstance ?? "—";
+    timeEl.textContent= api.time||"—";
+
+    polls++; kPolls.textContent = polls;
+
+    // latency
+    pushLatency(Math.round(t1-t0));
+
+    // memory
+    if(stats?.memory?.heapUsedMB) kHeap.textContent = stats.memory.heapUsedMB;
+
+    // windows & totals
+    const h = api.instanceHostname || "unknown";
+    instanceWindow.push(h); if (instanceWindow.length > Math.ceil(60000 / POLL_MS)) instanceWindow.shift();
+    seenTotals.set(h, (seenTotals.get(h)||0) + 1);
+    renderChips(); updateBar(); updateInstLine();
+  }
+
+  // UI events
+  startBtn.onclick = () => { if(timer) return; setButtons(true); tick(); timer=setInterval(tick, POLL_MS); };
+  stopBtn.onclick  = () => { if(!timer) return; clearInterval(timer); timer=null; setButtons(false); };
+  pollSel.onchange = () => { POLL_MS = +pollSel.value; if(timer){ clearInterval(timer); timer=setInterval(tick, POLL_MS); } };
+  openStress.onclick = () => { const u = new URL(location.href); u.pathname="/stress"; u.search="?ms=800"; window.open(u.toString(), "_blank"); };
+</script>
 </body>
 </html>
